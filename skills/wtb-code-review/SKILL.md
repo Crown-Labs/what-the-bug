@@ -124,7 +124,7 @@ Extract AC sections from issue bodies for use in Step 3 (AC Coverage check).
 
 ## Step 3 — Analysis
 
-Review the diff across 5 dimensions:
+Review the diff across 6 dimensions:
 
 ### 3a. Logic & Correctness
 - Bugs, edge cases, null handling
@@ -153,6 +153,16 @@ Review the diff across 5 dimensions:
 ### 3e. AC Coverage (if linked issues exist)
 - For each Acceptance Criterion in linked issues, check if the diff covers it
 - Mark each AC as covered (✅) or missing (⚠️)
+
+### 3f. Testing
+- Do tests verify real behavior, not just mock responses?
+- Edge cases covered in tests? (empty, null, boundary, error states)
+- Integration tests for critical paths? (API calls, DB operations)
+- Test naming — clear what's being tested and expected outcome?
+- No tests deleted or skipped without justification
+- New code paths have corresponding test coverage
+
+**Note:** Testing findings feed into the **Correctness** scoring component.
 
 **For each issue found, record:**
 - Severity: 🔴 Critical / 🟡 Medium / 🟢 Minor
