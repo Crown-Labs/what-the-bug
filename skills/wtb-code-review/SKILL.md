@@ -213,6 +213,11 @@ Format the review results:
 - Correctness:         8.0
 - Production Readiness: 8.5
 
+💪 Strengths
+- Clean separation of billing logic from UI — easy to test independently
+- Good use of TypeScript generics for payment types
+- Error boundary properly catches render failures
+
 🔴 Critical (0)
 (none)
 
@@ -235,7 +240,20 @@ Format the review results:
 💡 Suggestions
 - Consider adding integration test for payment flow
 - billing.ts is 280 lines — consider splitting
+
+🏁 Verdict: ✅ Ready to merge
 ```
+
+**Strengths section rules:**
+- Lists 2-4 specific things done well in the code
+- Must be concrete and specific (file/pattern references), not generic praise
+- Always appears before issues — acknowledge good work first
+- If nothing noteworthy → show `- Solid implementation overall` (minimum 1 line)
+
+**Verdict logic** (derive from score + critical count):
+- `✅ Ready to merge` — Score >= 8.0 AND no Critical issues
+- `⚠️ Ready to merge with fixes` — Score 7.0-7.9 AND no Critical issues (list the Medium items to address)
+- `🚫 Not ready — requires changes` — Score < 7.0 OR has Critical issues (list blockers)
 
 **Conditional sections:**
 - If no Critical issues → show `🔴 Critical (0)` with "(none)"
@@ -301,3 +319,5 @@ gh pr comment $PR_NUMBER --repo "$REPO_FULL" --body "$REVIEW_BODY"
 - **No approve with Critical issues:** never offer approve when 🔴 issues exist
 - **Local mode is output-only:** never attempt to post to GitHub in local mode
 - **AC Coverage requires linked issues:** if no issues linked to the PR, omit the AC section
+- **Strengths section is mandatory:** always acknowledge 2-4 specific positive aspects before listing issues
+- **Verdict is mandatory:** always end output with a clear Ready/Not Ready verdict derived from score + critical count
