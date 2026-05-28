@@ -321,3 +321,66 @@ gh pr comment $PR_NUMBER --repo "$REPO_FULL" --body "$REVIEW_BODY"
 - **AC Coverage requires linked issues:** if no issues linked to the PR, omit the AC section
 - **Strengths section is mandatory:** always acknowledge 2-4 specific positive aspects before listing issues
 - **Verdict is mandatory:** always end output with a clear Ready/Not Ready verdict derived from score + critical count
+
+---
+
+## Appendix: Receiving Review Feedback
+
+Guidance for when YOU receive review feedback on your code. This is not part of the review workflow — it's a reference for handling incoming feedback with technical rigor.
+
+### The Response Pattern
+
+```
+1. READ — Complete all feedback without reacting
+2. UNDERSTAND — Restate each item in your own words (or ask)
+3. VERIFY — Check against codebase reality before implementing
+4. EVALUATE — Is this technically sound for THIS codebase?
+5. IMPLEMENT — One item at a time, test each
+```
+
+### Verify Before Implementing
+
+Before acting on any feedback:
+- Check if the suggestion breaks existing functionality
+- Check if there's a reason for the current implementation (git blame, comments)
+- Check if the suggestion works across all use cases, not just the reviewer's scenario
+- If you can't verify → say so: "I can't verify this without [X]. Should I investigate?"
+
+### When to Push Back
+
+Push back when:
+- Suggestion breaks existing tests or functionality
+- Reviewer lacks full context of the change
+- Violates YAGNI — adding unused features "for completeness"
+- Technically incorrect for this stack/version
+- Conflicts with architectural decisions already made
+
+How to push back:
+- Use technical reasoning, not defensiveness
+- Reference working tests or code
+- Ask specific questions: "Would this break X?" not "I don't think that's right"
+
+### Implementation Order
+
+When addressing multiple feedback items:
+1. Clarify anything unclear FIRST — don't implement partial understanding
+2. Blocking issues (security, breaks, data loss)
+3. Simple fixes (naming, imports, formatting)
+4. Complex fixes (refactoring, logic changes)
+5. Test each fix individually
+6. Verify no regressions after all fixes
+
+### YAGNI Check
+
+If a reviewer suggests "implementing properly" or "adding for completeness":
+- Search the codebase for actual usage
+- If unused → question whether it's needed: "Nothing calls this. Remove it (YAGNI)?"
+- If used → then implement properly
+
+### Acknowledging Correct Feedback
+
+When feedback IS correct:
+- State the fix: "Fixed. [Brief description of what changed]"
+- Or just fix it — the code shows you heard the feedback
+- No performative agreement ("Great point!", "You're absolutely right!")
+- Actions over words
