@@ -25,6 +25,7 @@ Three scores, each 0.0–10.0 (one decimal place):
 - Race conditions — concurrent access to shared state
 - Resource disposal — files, connections, subscriptions properly closed
 - Resource leaks — memory, file handles, event listeners
+- Testing quality — tests verify real behavior, not just mocks; edge cases covered
 
 ### Production Readiness
 - Security — injection prevention, secret leakage, auth bypass, input validation
@@ -106,6 +107,8 @@ Example:
 - 🔴 Critical: Async function missing `await` on database write — data silently lost
 - 🟡 Medium: No null check on API response — will throw in production if service returns 204
 - 🟢 Minor: Edge case not tested: what happens with an empty array?
+- 🟡 Medium: New API endpoint has no tests — untested code path in production
+- 🟢 Minor: Test exists but only covers happy path — missing edge case for empty input
 
 ### Production Readiness examples
 - 🔴 Critical: User input concatenated into SQL query — injection vulnerability
