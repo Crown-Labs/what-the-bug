@@ -1,0 +1,12 @@
+{
+  "name": "crown-labs-wtb",
+  "version": "1.0.0",
+  "description": "Crown-Labs What The Bug plugin marketplace",
+  "plugins": [
+    {
+      "name": "what-the-bug",
+      "source": ".",
+      "description": "GitHub issue tracking, PR management, and code review toolkit"
+    }
+  ]
+}

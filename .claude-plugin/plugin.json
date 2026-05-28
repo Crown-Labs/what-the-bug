@@ -1,0 +1,9 @@
+{
+  "name": "what-the-bug",
+  "version": "0.1.0",
+  "description": "GitHub issue tracking, PR management, and code review toolkit for teams using gh CLI",
+  "author": "Crown-Labs",
+  "repository": "https://github.com/Crown-Labs/what-the-bug",
+  "license": "MIT",
+  "keywords": ["github", "issues", "pr", "code-review", "project-management"]
+}
