@@ -52,24 +52,21 @@ A Claude Code plugin for GitHub issue tracking, PR management, and code review. 
 
 ## Example Usage
 
-**Create an issue from a bug description:**
+### Issue Management
+
+```
+/wtb-issue-create [description]
+/wtb-issue-triage
+```
+
+**Create an issue from a bug report:**
 ```
 /wtb-issue-create Users report 500 error on /api/checkout when cart has more than 50 items
 ```
 
-**Create a PR after fixing a bug:**
+**Create an issue from a feature request:**
 ```
-/wtb-pr-create Fixes the cart overflow bug by adding pagination to the checkout query
-```
-
-**Review your own changes before pushing:**
-```
-/wtb-code-review
-```
-
-**Run morning standup:**
-```
-/wtb-daily-standup
+/wtb-issue-create Add dark mode toggle to the settings page with system preference detection
 ```
 
 **Triage unclassified issues:**
@@ -77,9 +74,91 @@ A Claude Code plugin for GitHub issue tracking, PR management, and code review. 
 /wtb-issue-triage
 ```
 
-**Check open PR status:**
+### Pull Requests
+
+```
+/wtb-pr-create [optional title or description] [--draft]
+/wtb-pr-status
+```
+
+**Create a PR (auto-detect title from commits/branch):**
+```
+/wtb-pr-create
+```
+
+**Create a PR with a custom title:**
+```
+/wtb-pr-create Add rate limiting to public API endpoints
+```
+
+**Create a draft PR:**
+```
+/wtb-pr-create --draft
+```
+
+**Create a draft PR with a custom title:**
+```
+/wtb-pr-create Add rate limiting to public API endpoints --draft
+```
+
+**Check status of all open PRs:**
 ```
 /wtb-pr-status
+```
+
+### Code Review
+
+```
+/wtb-code-review [--local] [--pr N] [--peer]
+```
+
+**Auto-detect mode (local changes or current branch PR):**
+```
+/wtb-code-review
+```
+
+**Review local uncommitted/staged changes (pre-PR):**
+```
+/wtb-code-review --local
+```
+
+**Review a specific PR (self-review if you're the author):**
+```
+/wtb-code-review --pr 42
+```
+
+**Peer review a teammate's PR:**
+```
+/wtb-code-review --pr 42 --peer
+```
+
+### Reports
+
+```
+/wtb-daily-standup
+/wtb-weekly-report
+/wtb-weekly-plan
+/wtb-blocked-alert
+```
+
+**Morning standup summary:**
+```
+/wtb-daily-standup
+```
+
+**End-of-week report:**
+```
+/wtb-weekly-report
+```
+
+**Plan next week's work:**
+```
+/wtb-weekly-plan
+```
+
+**Scan for blocked issues and stale PRs:**
+```
+/wtb-blocked-alert
 ```
 
 ## How It Works
