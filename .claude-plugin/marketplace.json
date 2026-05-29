@@ -1,7 +1,10 @@
 {
-  "name": "crown-labs-wtb",
+  "name": "crown-labs-what-the-bug",
   "version": "1.0.0",
   "description": "Crown-Labs What The Bug plugin marketplace",
+  "owner": {
+    "name": "Crown-Labs"
+  },
   "plugins": [
     {
       "name": "what-the-bug",
