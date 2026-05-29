@@ -225,6 +225,18 @@ GH_USER=$(gh api user --jq '.login')
 echo "Current user: $GH_USER"
 ```
 
+Fetch the milestone from the first linked issue (used later when creating the PR):
+
+```bash
+FIRST_ISSUE=$(echo "$LINKED_ISSUES" | awk '{print $1}')
+PR_MILESTONE=$(gh issue view "$FIRST_ISSUE" --repo "$REPO_FULL" --json milestone --jq '.milestone.title // empty')
+if [ -n "$PR_MILESTONE" ]; then
+  echo "Milestone from #$FIRST_ISSUE: $PR_MILESTONE"
+else
+  echo "No milestone set on #$FIRST_ISSUE — PR will have no milestone"
+fi
+```
+
 For each issue in `LINKED_ISSUES`, check if it has an assignee. If not, assign the current user:
 
 ```bash
@@ -444,6 +456,7 @@ Push needed:  $NEEDS_PUSH
 
 Issues:       $LINKED_ISSUES (formatted as: Closes #612, Closes #598)
 Assignee:     @$GH_USER
+Milestone:    $PR_MILESTONE (or "none")
 Reviewers:    $SUGGESTED_REVIEWERS (or "none detected")
 
 ─────────────────────────────────────────
@@ -499,6 +512,15 @@ if [ "$SUGGESTED_REVIEWERS" != "none" ]; then
 fi
 ```
 
+Build milestone flag:
+
+```bash
+MILESTONE_FLAG=""
+if [ -n "$PR_MILESTONE" ]; then
+  MILESTONE_FLAG="--milestone \"$PR_MILESTONE\""
+fi
+```
+
 Build draft flag:
 
 ```bash
@@ -522,6 +544,7 @@ PR_OUTPUT=$(gh pr create \
   --base "$BASE_BRANCH" \
   --head "$CURRENT_BRANCH" \
   --assignee "$GH_USER" \
+  $MILESTONE_FLAG \
   $REVIEWER_FLAGS \
   $DRAFT_FLAG_ARG \
   2>"$ERR_FILE")
@@ -548,6 +571,7 @@ Title:   $PR_TITLE
 Base:    $BASE_BRANCH ← $CURRENT_BRANCH
 Issues:  [formatted LINKED_ISSUES: Closes #612, Closes #598]
 Assignee: @$GH_USER
+Milestone: $PR_MILESTONE (or "none")
 ```
 
 Then run:
