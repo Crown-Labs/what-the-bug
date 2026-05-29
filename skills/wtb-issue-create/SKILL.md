@@ -320,7 +320,7 @@ After issue is created, display per-field status:
 Title:    [Feature] Add /wtb-help skill
 Labels:   enhancement
 Assignee: — (none)
-Projects: GetPod.AI Project
+Projects: My Project Board
   Priority: Medium ✅
   Size:     XS ✅
 ```
