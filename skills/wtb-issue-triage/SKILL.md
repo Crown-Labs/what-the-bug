@@ -45,11 +45,11 @@ Filter issues missing at least one of:
 2. No milestone set
 3. If Projects detected: no Priority or Size set (check via GraphQL)
 
-If Projects detected, also fetch Projects field values for each issue:
+If Projects detected, also fetch Projects field values for each issue. Use `$PRIORITY_FIELD_NAME` and `$SIZE_FIELD_NAME` from foundation D2 (not hardcoded names):
 
 ```bash
 gh api graphql -f query='
-  query($projectId: ID!) {
+  query($projectId: ID!, $priorityField: String!, $sizeField: String!) {
     node(id: $projectId) {
       ... on ProjectV2 {
         items(first: 100) {
@@ -57,10 +57,10 @@ gh api graphql -f query='
             content {
               ... on Issue { number }
             }
-            fieldValueByName(name: "Priority") {
+            priority: fieldValueByName(name: $priorityField) {
               ... on ProjectV2ItemFieldSingleSelectValue { name }
             }
-            fieldValueByName(name: "Size") {
+            size: fieldValueByName(name: $sizeField) {
               ... on ProjectV2ItemFieldSingleSelectValue { name }
             }
           }
@@ -68,7 +68,9 @@ gh api graphql -f query='
       }
     }
   }
-' -f projectId="$PROJECT_ID" 2>/dev/null
+' -f projectId="$PROJECT_ID" \
+  -f priorityField="$PRIORITY_FIELD_NAME" \
+  -f sizeField="$SIZE_FIELD_NAME" 2>/dev/null
 ```
 
 Cross-reference: issues without Priority or Size in the Projects board are untriaged.
@@ -148,6 +150,15 @@ gh issue edit $ISSUE_NUMBER --repo "$REPO_FULL" --milestone "$MILESTONE_TITLE"
 
 **Set Priority + Size via Projects (if PROJECT_ID detected):**
 
+First, look up option IDs using the `lookup_option` helper from foundation D3:
+
+```bash
+PRIORITY_OPTION_ID=$(lookup_option "$PRIORITY_OPTIONS" "$SUGGESTED_PRIORITY")
+SIZE_OPTION_ID=$(lookup_option "$SIZE_OPTIONS" "$SUGGESTED_SIZE")
+```
+
+Then set the fields with error handling:
+
 ```bash
 # 1. Get issue node_id
 ISSUE_NODE_ID=$(gh api repos/$REPO_OWNER/$REPO_NAME/issues/$ISSUE_NUMBER --jq .node_id)
@@ -161,30 +172,53 @@ ITEM_ID=$(gh api graphql -f query='
   }
 ' -f projectId="$PROJECT_ID" -f contentId="$ISSUE_NODE_ID" --jq '.data.addProjectV2ItemById.item.id')
 
-# 3. Set Priority
-gh api graphql -f query='
-  mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
-      value: { singleSelectOptionId: $value }
-    }) { projectV2Item { id } }
-  }
-' -f projectId="$PROJECT_ID" -f itemId="$ITEM_ID" \
-  -f fieldId="$PRIORITY_FIELD_ID" -f value="$PRIORITY_OPTION_ID"
+if [ -z "$ITEM_ID" ]; then
+  PRIORITY_SET="failed"
+  SIZE_SET="failed"
+else
+  # 3. Set Priority
+  PRIORITY_SET="skipped"
+  if [ -n "$PRIORITY_FIELD_ID" ] && [ -n "$PRIORITY_OPTION_ID" ]; then
+    RESULT=$(gh api graphql -f query='
+      mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
+        updateProjectV2ItemFieldValue(input: {
+          projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+          value: { singleSelectOptionId: $value }
+        }) { projectV2Item { id } }
+      }
+    ' -f projectId="$PROJECT_ID" -f itemId="$ITEM_ID" \
+      -f fieldId="$PRIORITY_FIELD_ID" -f value="$PRIORITY_OPTION_ID" 2>&1)
+    if echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if 'errors' not in d else 1)" 2>/dev/null; then
+      PRIORITY_SET="true"
+    else
+      PRIORITY_SET="failed"
+    fi
+  fi
 
-# 4. Set Size
-gh api graphql -f query='
-  mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
-      value: { singleSelectOptionId: $value }
-    }) { projectV2Item { id } }
-  }
-' -f projectId="$PROJECT_ID" -f itemId="$ITEM_ID" \
-  -f fieldId="$SIZE_FIELD_ID" -f value="$SIZE_OPTION_ID"
+  # 4. Set Size
+  SIZE_SET="skipped"
+  if [ -n "$SIZE_FIELD_ID" ] && [ -n "$SIZE_OPTION_ID" ]; then
+    RESULT=$(gh api graphql -f query='
+      mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
+        updateProjectV2ItemFieldValue(input: {
+          projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+          value: { singleSelectOptionId: $value }
+        }) { projectV2Item { id } }
+      }
+    ' -f projectId="$PROJECT_ID" -f itemId="$ITEM_ID" \
+      -f fieldId="$SIZE_FIELD_ID" -f value="$SIZE_OPTION_ID" 2>&1)
+    if echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if 'errors' not in d else 1)" 2>/dev/null; then
+      SIZE_SET="true"
+    else
+      SIZE_SET="failed"
+    fi
+  fi
+fi
 ```
 
-After applying, confirm: `✅ #601: bug | High | M | feat/performance — applied`
+After applying, confirm with per-field status:
+- `✅ #601: bug | High ✅ | M ✅ | feat/performance — applied`
+- If a field failed: `High ❌` or `M ❌`
 
 **Rules:**
 - Steps 1–3 are readonly. Step 4 writes only after explicit user confirmation.

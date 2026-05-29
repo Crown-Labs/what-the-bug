@@ -127,6 +127,8 @@ Attempt to find a ProjectV2 board linked to the repository. This is optional —
 
 **Default board name:** "GetPod.AI Project"
 
+### D1. Query Projects
+
 ```bash
 PROJECT_DATA=$(gh api graphql -f query='
   query($owner: String!, $repo: String!) {
@@ -154,19 +156,79 @@ PROJECT_DATA=$(gh api graphql -f query='
 If `PROJECT_DATA` is `NO_PROJECTS` or contains no ProjectV2 nodes:
 - Set `PROJECT_ID=""` (empty — no Projects board)
 - Skills that depend on Projects fields gracefully skip those features
+- Skip D2 entirely
 
-If Projects found:
-- Prefer the board titled "GetPod.AI Project" if it exists; otherwise use the first board
-- Extract and store:
-  - `PROJECT_ID` — the ProjectV2 node ID
-  - `PRIORITY_FIELD_ID` — field ID for "Priority" (single select)
-  - `PRIORITY_OPTIONS` — map of option name → option ID (e.g., `High=abc123`)
-  - `SIZE_FIELD_ID` — field ID for "Size" (single select)
-  - `SIZE_OPTIONS` — map of option name → option ID
-  - `STATUS_FIELD_ID` — field ID for "Status" (single select)
-  - `STATUS_OPTIONS` — map of option name → option ID
+### D2. Parse Fields
 
-**Stored variables:** `PROJECT_ID`, `PRIORITY_FIELD_ID`, `PRIORITY_OPTIONS`, `SIZE_FIELD_ID`, `SIZE_OPTIONS`, `STATUS_FIELD_ID`, `STATUS_OPTIONS` (all empty if no Projects board)
+Select the preferred board and extract field IDs using **case-insensitive contains** matching. This handles boards where fields are named "Project Priority" instead of "Priority", etc.
+
+```bash
+# Select project board — prefer "GetPod.AI Project", fallback to first
+PROJECT_JSON=$(echo "$PROJECT_DATA" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+nodes = data['data']['repository']['projectsV2']['nodes']
+if not nodes:
+    print('{}')
+    sys.exit()
+preferred = [n for n in nodes if n['title'] == 'GetPod.AI Project']
+print(json.dumps(preferred[0] if preferred else nodes[0]))
+")
+
+PROJECT_ID=$(echo "$PROJECT_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+
+# Parse all single-select fields into a lookup
+# Match by case-insensitive contains: "priority", "size", "status"
+read PRIORITY_FIELD_ID PRIORITY_FIELD_NAME PRIORITY_OPTIONS \
+     SIZE_FIELD_ID SIZE_FIELD_NAME SIZE_OPTIONS \
+     STATUS_FIELD_ID STATUS_FIELD_NAME STATUS_OPTIONS \
+< <(echo "$PROJECT_JSON" | python3 -c "
+import json, sys
+
+project = json.load(sys.stdin)
+fields = [f for f in project.get('fields',{}).get('nodes',[]) if f.get('name')]
+
+def find_field(keyword):
+    for f in fields:
+        if keyword in f['name'].lower():
+            opts = {o['name']: o['id'] for o in f.get('options',[])}
+            return f['id'], f['name'], json.dumps(opts)
+    return '', '', '{}'
+
+p_id, p_name, p_opts = find_field('priority')
+s_id, s_name, s_opts = find_field('size')
+st_id, st_name, st_opts = find_field('status')
+
+# Output as tab-separated for read
+print(f'{p_id}\t{p_name}\t{p_opts}\t{s_id}\t{s_name}\t{s_opts}\t{st_id}\t{st_name}\t{st_opts}')
+")
+```
+
+If `PROJECT_ID` is empty after parsing, treat as no Projects board.
+
+**Stored variables:**
+- `PROJECT_ID` — the ProjectV2 node ID
+- `PRIORITY_FIELD_ID`, `PRIORITY_FIELD_NAME`, `PRIORITY_OPTIONS` — field ID, actual field name (e.g. "Project Priority"), JSON map `{"High":"abc","Medium":"def","Low":"ghi"}`
+- `SIZE_FIELD_ID`, `SIZE_FIELD_NAME`, `SIZE_OPTIONS` — same pattern
+- `STATUS_FIELD_ID`, `STATUS_FIELD_NAME`, `STATUS_OPTIONS` — same pattern
+
+All empty strings if no Projects board detected.
+
+### D3. Helper: Look Up Option ID
+
+Use this helper whenever you need to convert a user-facing value (e.g. "High", "XS") to its Projects option ID:
+
+```bash
+# Usage: lookup_option "$OPTIONS_JSON" "$VALUE"
+# Returns: option ID or empty string
+lookup_option() {
+  echo "$1" | python3 -c "import json,sys; print(json.load(sys.stdin).get('$2',''))"
+}
+
+# Example:
+PRIORITY_OPTION_ID=$(lookup_option "$PRIORITY_OPTIONS" "$PRIORITY")
+SIZE_OPTION_ID=$(lookup_option "$SIZE_OPTIONS" "$SUGGESTED_SIZE")
+```
 
 ---
 

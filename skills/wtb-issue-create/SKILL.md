@@ -237,6 +237,19 @@ Extract the created issue number from the `gh issue create` output URL.
 
 Only if `PROJECT_ID` is detected (from Step 0). Skip entirely if no Projects board.
 
+### 5b-1. Look up option IDs
+
+Use the `lookup_option` helper from foundation D3 to convert user-facing values to option IDs:
+
+```bash
+PRIORITY_OPTION_ID=$(lookup_option "$PRIORITY_OPTIONS" "$PRIORITY")
+SIZE_OPTION_ID=$(lookup_option "$SIZE_OPTIONS" "$SUGGESTED_SIZE")
+```
+
+If either option ID is empty, that field cannot be set — report it in output but continue with the other field.
+
+### 5b-2. Add issue to project and set fields
+
 ```bash
 ISSUE_NUMBER=<from Step 5a>
 
@@ -252,37 +265,72 @@ ITEM_ID=$(gh api graphql -f query='
   }
 ' -f projectId="$PROJECT_ID" -f contentId="$ISSUE_NODE_ID" --jq '.data.addProjectV2ItemById.item.id')
 
-# 3. Set Priority field
-gh api graphql -f query='
-  mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
-      value: { singleSelectOptionId: $value }
-    }) { projectV2Item { id } }
-  }
-' -f projectId="$PROJECT_ID" -f itemId="$ITEM_ID" \
-  -f fieldId="$PRIORITY_FIELD_ID" -f value="$PRIORITY_OPTION_ID"
+if [ -z "$ITEM_ID" ]; then
+  # Failed to add to project — skip field setting
+  PRIORITY_SET="failed"
+  SIZE_SET="failed"
+else
+  # 3. Set Priority field
+  PRIORITY_SET="skipped"
+  if [ -n "$PRIORITY_FIELD_ID" ] && [ -n "$PRIORITY_OPTION_ID" ]; then
+    RESULT=$(gh api graphql -f query='
+      mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
+        updateProjectV2ItemFieldValue(input: {
+          projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+          value: { singleSelectOptionId: $value }
+        }) { projectV2Item { id } }
+      }
+    ' -f projectId="$PROJECT_ID" -f itemId="$ITEM_ID" \
+      -f fieldId="$PRIORITY_FIELD_ID" -f value="$PRIORITY_OPTION_ID" 2>&1)
+    if echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if 'errors' not in d else 1)" 2>/dev/null; then
+      PRIORITY_SET="true"
+    else
+      PRIORITY_SET="failed"
+    fi
+  fi
 
-# 4. Set Size field
-gh api graphql -f query='
-  mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
-      value: { singleSelectOptionId: $value }
-    }) { projectV2Item { id } }
-  }
-' -f projectId="$PROJECT_ID" -f itemId="$ITEM_ID" \
-  -f fieldId="$SIZE_FIELD_ID" -f value="$SIZE_OPTION_ID"
+  # 4. Set Size field
+  SIZE_SET="skipped"
+  if [ -n "$SIZE_FIELD_ID" ] && [ -n "$SIZE_OPTION_ID" ]; then
+    RESULT=$(gh api graphql -f query='
+      mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
+        updateProjectV2ItemFieldValue(input: {
+          projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+          value: { singleSelectOptionId: $value }
+        }) { projectV2Item { id } }
+      }
+    ' -f projectId="$PROJECT_ID" -f itemId="$ITEM_ID" \
+      -f fieldId="$SIZE_FIELD_ID" -f value="$SIZE_OPTION_ID" 2>&1)
+    if echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if 'errors' not in d else 1)" 2>/dev/null; then
+      SIZE_SET="true"
+    else
+      SIZE_SET="failed"
+    fi
+  fi
+fi
 ```
 
-After issue is created, display:
+### 5b-3. Output
+
+After issue is created, display per-field status:
+
 ```
 ✅ Issue created: https://github.com/[owner]/[repo]/issues/[number]
 
-Title:    [Bug] Fix slow dashboard loading
-Labels:   bug
-Priority: High | Size: M — set in GitHub Projects ✅
+Title:    [Feature] Add /wtb-help skill
+Labels:   enhancement
+Assignee: — (none)
+Projects: GetPod.AI Project
+  Priority: Medium ✅
+  Size:     XS ✅
 ```
+
+Status indicators per field:
+- `✅` — set successfully (`PRIORITY_SET="true"`)
+- `❌ (field not found)` — field ID or option ID empty (`"skipped"`)
+- `❌ (mutation failed)` — GraphQL returned errors (`"failed"`)
+
+If no Projects board: omit the Projects section entirely.
 
 ---
 
