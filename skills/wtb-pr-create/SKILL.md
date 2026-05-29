@@ -216,7 +216,33 @@ Store confirmed list as `LINKED_ISSUES` — an array of issue numbers, e.g. `[61
 
 Format for PR body: `Closes #612, Closes #598` (one `Closes #NNN` per issue, comma-separated on one line).
 
-### 2e. Derive PR title
+### 2e. Auto-assign linked issues
+
+Get the current authenticated GitHub user:
+
+```bash
+GH_USER=$(gh api user --jq '.login')
+echo "Current user: $GH_USER"
+```
+
+For each issue in `LINKED_ISSUES`, check if it has an assignee. If not, assign the current user:
+
+```bash
+for ISSUE_NUM in $LINKED_ISSUES; do
+  ASSIGNEE=$(gh issue view "$ISSUE_NUM" --repo "$REPO_FULL" --json assignees --jq '.assignees[0].login // empty')
+  if [ -z "$ASSIGNEE" ]; then
+    gh issue edit "$ISSUE_NUM" --repo "$REPO_FULL" --add-assignee "$GH_USER" && \
+      echo "Assigned @$GH_USER to #$ISSUE_NUM" || \
+      echo "Warning: Failed to assign #$ISSUE_NUM (continuing)"
+  else
+    echo "#$ISSUE_NUM already assigned to @$ASSIGNEE"
+  fi
+done
+```
+
+This step is best-effort — if assignment fails (e.g. permissions), warn but continue to Step 2f.
+
+### 2f. Derive PR title
 
 Priority order:
 1. If user provided a description/title override at invocation → use that
@@ -235,7 +261,7 @@ Example: `feat/sidebar-keyboard-shortcut` → `[Feature] Sidebar Keyboard Shortc
 
 Store as `PR_TITLE`.
 
-### 2f. Determine change type (for PR body checkbox)
+### 2g. Determine change type (for PR body checkbox)
 
 Based on type prefix detected above:
 - `[Fix]` → check "Bug fix" box
@@ -245,7 +271,7 @@ Based on type prefix detected above:
 - `[Chore]` → check "Enhancement" box (no dedicated checkbox — closest match)
 - Default → check "Enhancement" box
 
-### 2g. Build PR body
+### 2h. Build PR body
 
 Using this template, fill in all sections:
 
