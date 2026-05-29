@@ -50,6 +50,38 @@ A Claude Code plugin for GitHub issue tracking, PR management, and code review. 
 - **Mobile-friendly output** — bullet lists, emoji headers, no markdown tables
 - **Scoring rubric** — structured code review with 3 components scored 0.0–10.0
 
+## Example Usage
+
+**Create an issue from a bug description:**
+```
+/wtb-issue-create Users report 500 error on /api/checkout when cart has more than 50 items
+```
+
+**Create a PR after fixing a bug:**
+```
+/wtb-pr-create Fixes the cart overflow bug by adding pagination to the checkout query
+```
+
+**Review your own changes before pushing:**
+```
+/wtb-code-review
+```
+
+**Run morning standup:**
+```
+/wtb-daily-standup
+```
+
+**Triage unclassified issues:**
+```
+/wtb-issue-triage
+```
+
+**Check open PR status:**
+```
+/wtb-pr-status
+```
+
 ## How It Works
 
 All skills share a common foundation (`shared/foundation.md`) that handles:
