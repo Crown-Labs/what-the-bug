@@ -52,41 +52,34 @@ A Claude Code plugin for GitHub issue tracking, PR management, and code review. 
 
 ## Example Usage
 
-### Issue Management
+### Create Issues
 
 ```
 /wtb-issue-create [description]
-/wtb-issue-triage
 ```
 
-**Create an issue from a bug report:**
+**From a bug report:**
 ```
 /wtb-issue-create Users report 500 error on /api/checkout when cart has more than 50 items
 ```
 
-**Create an issue from a feature request:**
+**From a feature request:**
 ```
 /wtb-issue-create Add dark mode toggle to the settings page with system preference detection
 ```
 
-**Triage unclassified issues:**
-```
-/wtb-issue-triage
-```
-
-### Pull Requests
+### Create Pull Requests
 
 ```
 /wtb-pr-create [optional title or description] [--draft]
-/wtb-pr-status
 ```
 
-**Create a PR (auto-detect title from commits/branch):**
+**Auto-detect title from commits/branch:**
 ```
 /wtb-pr-create
 ```
 
-**Create a PR with a custom title:**
+**With a custom title:**
 ```
 /wtb-pr-create Add rate limiting to public API endpoints
 ```
@@ -96,14 +89,9 @@ A Claude Code plugin for GitHub issue tracking, PR management, and code review. 
 /wtb-pr-create --draft
 ```
 
-**Create a draft PR with a custom title:**
+**Draft with custom title:**
 ```
 /wtb-pr-create Add rate limiting to public API endpoints --draft
-```
-
-**Check status of all open PRs:**
-```
-/wtb-pr-status
 ```
 
 ### Code Review
@@ -132,33 +120,140 @@ A Claude Code plugin for GitHub issue tracking, PR management, and code review. 
 /wtb-code-review --pr 42 --peer
 ```
 
-### Reports
+## Report Skills
+
+### Daily Standup
 
 ```
 /wtb-daily-standup
+```
+
+Example output:
+```
+📅 Daily Standup — Thu May 29
+
+✅ Done Yesterday
+- #412 Fix session timeout on mobile — @alice (merged)
+- #415 Update API rate limit docs — @bob (merged)
+
+🔄 In Progress Today
+- #420 Add billing page — @alice
+- #423 Refactor auth middleware — @bob
+
+🚧 Blocked
+- #418 Payment gateway integration — @alice — waiting on 3rd party API key
+
+📋 Candidates (unassigned, ready to pick up)
+- #430 [High/S] Add CSRF protection to forms
+- #431 [Medium/XS] Update footer copyright year
+```
+
+### Weekly Report
+
+```
 /wtb-weekly-report
+```
+
+Example output:
+```
+📊 Weekly Report — May 26–May 30
+
+📈 Throughput
+- Closed: 8 issues, 6 PRs merged
+- Opened: 5 new issues
+- Net: +3 resolved
+
+✅ Completed
+- #412 Fix session timeout on mobile [High/S] — @alice
+- #415 Update API rate limit docs [Low/XS] — @bob
+- #416 Add input validation to signup [Medium/M] — @alice
+
+🔄 Carry-over (still in progress)
+- #420 Add billing page [High/L] — @alice
+- #423 Refactor auth middleware [Medium/M] — @bob
+
+🚧 Blockers This Week
+- #418 waited 4 days on 3rd party API key — @alice
+
+👥 Contributor Activity
+- @alice: 5 issues closed, 4 PRs merged
+- @bob: 3 issues closed, 2 PRs merged
+```
+
+### Weekly Plan
+
+```
 /wtb-weekly-plan
+```
+
+Example output:
+```
+📋 Weekly Plan — Jun 2–Jun 6
+
+🔄 Carry-over (from this week)
+1. #420 Add billing page [High/L] — @alice continues
+2. #423 Refactor auth middleware [Medium/M] — @bob continues
+
+📥 Recommended from Backlog
+3. #430 Add CSRF protection [High/S] — unassigned
+4. #431 Update footer copyright [Medium/XS] — unassigned
+5. #435 Add search to dashboard [Low/M] — unassigned
+
+⚠️ Dependencies
+- #435 depends on #423 (auth refactor)
+
+📅 Milestone Deadlines
+- #430 in milestone "v2.1-security" due Jun 15
+
+💡 Notes
+- Total planned: 2 carry-over + 3 new = 5 issues
+- Estimated capacity: 2 devs × 5 days = ~20 story points
+```
+
+### Blocked Alert
+
+```
 /wtb-blocked-alert
 ```
 
-**Morning standup summary:**
+Example output:
 ```
-/wtb-daily-standup
+🚨 Blocked & Stale Alert
+
+🔴 Blocked Issues
+- #418 Payment gateway integration — @alice — blocked 4 days (since May 26)
+
+🟡 Stale Issues (no activity > 3 working days)
+- #410 Add export to CSV — @bob — last update May 22
+
+⏳ PRs Awaiting Review > 2 working days
+- PR #89 by @bob — review requested from @alice
+
+💥 PRs with Merge Conflicts
+- PR #87 by @alice — conflicts with main
 ```
 
-**End-of-week report:**
+### Issue Triage
+
 ```
-/wtb-weekly-report
+/wtb-issue-triage
 ```
 
-**Plan next week's work:**
+Example output:
 ```
-/wtb-weekly-plan
-```
+🏷️ Issue Triage — 3 untriaged issues
 
-**Scan for blocked issues and stale PRs:**
-```
-/wtb-blocked-alert
+#440 "Dashboard loads slowly with 1000+ records"
+  → Type: bug | Priority: High | Size: M | Milestone: v2.1-performance
+  [Apply? Y/n/edit]
+
+#441 "Add dark mode toggle to settings"
+  → Type: feature | Priority: Low | Size: S | Milestone: —
+  [Apply? Y/n/edit]
+
+#442 "Refactor database connection pooling"
+  → Type: tech-debt | Priority: Medium | Size: L | Milestone: v2.2
+  [Apply? Y/n/edit]
 ```
 
 ## How It Works
