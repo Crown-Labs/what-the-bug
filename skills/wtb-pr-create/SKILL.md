@@ -15,7 +15,7 @@ All operations use `gh` CLI and `git`.
 /wtb-pr-create [optional description or override title]
 ```
 
-Run from within the target git repository directory (e.g. `projects/getpod`).
+Run from within the target git repository directory.
 
 ---
 
