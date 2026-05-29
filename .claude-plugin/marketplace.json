@@ -1,0 +1,29 @@
+{
+  "name": "crown-labs-what-the-bug",
+  "owner": {
+    "name": "Crown-Labs"
+  },
+  "metadata": {
+    "description": "GitHub issue tracking, PR management, and code review toolkit",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "what-the-bug",
+      "description": "GitHub issue tracking, PR management, and code review toolkit for teams using gh CLI — includes daily standup, weekly reporting, sprint planning, issue triage, PR management, and code review with scoring",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/wtb-daily-standup",
+        "./skills/wtb-weekly-report",
+        "./skills/wtb-weekly-plan",
+        "./skills/wtb-blocked-alert",
+        "./skills/wtb-pr-status",
+        "./skills/wtb-issue-triage",
+        "./skills/wtb-issue-create",
+        "./skills/wtb-pr-create",
+        "./skills/wtb-code-review"
+      ]
+    }
+  ]
+}
