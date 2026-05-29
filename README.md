@@ -65,7 +65,7 @@ If your repo has a GitHub Projects board, WTB skills automatically detect and us
 - **Size** field (XS / S / M / L / XL)
 - **Status** field (In Progress / Done / etc.)
 
-Default board name: "GetPod.AI Project". If no board is found, skills fall back to issue labels and state.
+Uses the first ProjectV2 board linked to the repository. If no board is found, skills fall back to issue labels and state.
 
 ## Code Review Scoring
 
