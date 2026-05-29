@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "GitHub issue tracking, PR management, and code review toolkit",
-    "version": "1.0.7"
+    "version": "1.0.8"
   },
   "plugins": [
     {
