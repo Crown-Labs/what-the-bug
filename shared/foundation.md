@@ -125,7 +125,7 @@ TODAY=$(TZ=Asia/Bangkok date +%Y-%m-%d)
 
 Attempt to find a ProjectV2 board linked to the repository. This is optional — if no board is found, skills fall back to issue state + labels.
 
-**Default board name:** "GetPod.AI Project"
+The plugin uses the first ProjectV2 board linked to the repository.
 
 ### D1. Query Projects
 
@@ -163,7 +163,7 @@ If `PROJECT_DATA` is `NO_PROJECTS` or contains no ProjectV2 nodes:
 Select the preferred board and extract field IDs using **case-insensitive contains** matching. This handles boards where fields are named "Project Priority" instead of "Priority", etc.
 
 ```bash
-# Select project board — prefer "GetPod.AI Project", fallback to first
+# Select project board — use the first linked board
 PROJECT_JSON=$(echo "$PROJECT_DATA" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
@@ -171,8 +171,7 @@ nodes = data['data']['repository']['projectsV2']['nodes']
 if not nodes:
     print('{}')
     sys.exit()
-preferred = [n for n in nodes if n['title'] == 'GetPod.AI Project']
-print(json.dumps(preferred[0] if preferred else nodes[0]))
+print(json.dumps(nodes[0]))
 ")
 
 PROJECT_ID=$(echo "$PROJECT_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
