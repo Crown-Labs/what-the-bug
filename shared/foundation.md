@@ -176,31 +176,43 @@ print(json.dumps(nodes[0]))
 
 PROJECT_ID=$(echo "$PROJECT_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
 
-# Parse all single-select fields into a lookup
-# Match by case-insensitive contains: "priority", "size", "status"
-read PRIORITY_FIELD_ID PRIORITY_FIELD_NAME PRIORITY_OPTIONS \
-     SIZE_FIELD_ID SIZE_FIELD_NAME SIZE_OPTIONS \
-     STATUS_FIELD_ID STATUS_FIELD_NAME STATUS_OPTIONS \
-< <(echo "$PROJECT_JSON" | python3 -c "
-import json, sys
+# Parse all single-select fields into shell variables
+# Match by case-insensitive contains — when multiple fields match,
+# prefer the one with the most options (e.g. "Project Priority" with 4 options
+# wins over empty "Priority" field with 0 options)
+eval "$(echo "$PROJECT_JSON" | python3 -c "
+import json, sys, shlex
 
 project = json.load(sys.stdin)
 fields = [f for f in project.get('fields',{}).get('nodes',[]) if f.get('name')]
 
 def find_field(keyword):
+    matches = []
     for f in fields:
         if keyword in f['name'].lower():
             opts = {o['name']: o['id'] for o in f.get('options',[])}
-            return f['id'], f['name'], json.dumps(opts)
-    return '', '', '{}'
+            matches.append((f['id'], f['name'], json.dumps(opts), len(opts)))
+    if not matches:
+        return '', '', '{}'
+    # Prefer the field with the most options (functional field wins over empty)
+    matches.sort(key=lambda x: x[3], reverse=True)
+    return matches[0][0], matches[0][1], matches[0][2]
 
 p_id, p_name, p_opts = find_field('priority')
 s_id, s_name, s_opts = find_field('size')
 st_id, st_name, st_opts = find_field('status')
 
-# Output as tab-separated for read
-print(f'{p_id}\t{p_name}\t{p_opts}\t{s_id}\t{s_name}\t{s_opts}\t{st_id}\t{st_name}\t{st_opts}')
-")
+# Output as shell variable assignments (handles spaces in field names)
+print(f'PRIORITY_FIELD_ID={shlex.quote(p_id)}')
+print(f'PRIORITY_FIELD_NAME={shlex.quote(p_name)}')
+print(f'PRIORITY_OPTIONS={shlex.quote(p_opts)}')
+print(f'SIZE_FIELD_ID={shlex.quote(s_id)}')
+print(f'SIZE_FIELD_NAME={shlex.quote(s_name)}')
+print(f'SIZE_OPTIONS={shlex.quote(s_opts)}')
+print(f'STATUS_FIELD_ID={shlex.quote(st_id)}')
+print(f'STATUS_FIELD_NAME={shlex.quote(st_name)}')
+print(f'STATUS_OPTIONS={shlex.quote(st_opts)}')
+")"
 ```
 
 If `PROJECT_ID` is empty after parsing, treat as no Projects board.
