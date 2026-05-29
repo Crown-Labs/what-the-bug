@@ -443,6 +443,7 @@ Commits:      $COMMITS_AHEAD commit(s)
 Push needed:  $NEEDS_PUSH
 
 Issues:       $LINKED_ISSUES (formatted as: Closes #612, Closes #598)
+Assignee:     @$GH_USER
 Reviewers:    $SUGGESTED_REVIEWERS (or "none detected")
 
 ─────────────────────────────────────────
@@ -520,6 +521,7 @@ PR_OUTPUT=$(gh pr create \
   --body-file "$PR_BODY_FILE" \
   --base "$BASE_BRANCH" \
   --head "$CURRENT_BRANCH" \
+  --assignee "$GH_USER" \
   $REVIEWER_FLAGS \
   $DRAFT_FLAG_ARG \
   2>"$ERR_FILE")
@@ -545,6 +547,7 @@ Display to user:
 Title:   $PR_TITLE
 Base:    $BASE_BRANCH ← $CURRENT_BRANCH
 Issues:  [formatted LINKED_ISSUES: Closes #612, Closes #598]
+Assignee: @$GH_USER
 ```
 
 Then run:
